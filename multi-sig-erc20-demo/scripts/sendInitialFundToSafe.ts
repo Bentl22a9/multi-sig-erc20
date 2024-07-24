@@ -7,6 +7,9 @@ async function main() {
     const RPC_URL = process.env.RPC_URL || "";
     
     const owner_1_pk = process.env.ACCOUNT_0_PK || "";
+    const owner_1_address = process.env.ACCOUNT_0_ADDRESS || "";
+    const owner_2_address = process.env.ACCOUNT_1_ADDRESS || "";
+    const owner_3_address = process.env.ACCOUNT_2_ADDRESS || "";
     
     const deployedSafeAddress: string = process.env.SAFE_PROXY_ADDRESS || "";
 
