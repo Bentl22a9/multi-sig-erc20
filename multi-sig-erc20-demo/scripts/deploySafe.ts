@@ -1,7 +1,5 @@
-import { ethers } from "hardhat";
 import Safe, { SafeAccountConfig, SafeFactory, SafeProvider } from "@safe-global/protocol-kit";
 import * as dotenv from "dotenv";
-
 dotenv.config();
 
 async function main() {
@@ -12,7 +10,7 @@ async function main() {
     const owner_1_address = process.env.ACCOUNT_0_ADDRESS || "";
     const owner_2_address = process.env.ACCOUNT_1_ADDRESS || "";
     const owner_3_address = process.env.ACCOUNT_2_ADDRESS || "";
-    
+
     const safeProvider: SafeProvider = new SafeProvider({ 
         provider: RPC_URL,
         signer: owner_1_pk,
@@ -61,13 +59,15 @@ async function main() {
     };
 
     const predictSafeAddress: string = await safeFactory.predictSafeAddress(safeAccountConfig);
-    console.log("Safe will be deployed at ", predictSafeAddress);
+    console.log("Safe will be deployed at", predictSafeAddress);
 
     const protocolKitOwner1: Safe = await safeFactory.deploySafe({ safeAccountConfig });
 
     const safeAddress: string = await protocolKitOwner1.getAddress();
     
-    console.log("Safe has been deployed at ", safeAddress);
+    console.log("Safe has been deployed at", safeAddress);
+
+    console.log('🍥 Copy and paste the address to .env')
 }
 
 main().catch((error) => {
