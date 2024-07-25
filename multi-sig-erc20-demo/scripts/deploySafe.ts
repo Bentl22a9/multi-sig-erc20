@@ -6,14 +6,14 @@ async function main() {
     
     const RPC_URL = process.env.RPC_URL || "";
     
-    const owner_1_pk = process.env.ACCOUNT_0_PK || "";
-    const owner_1_address = process.env.ACCOUNT_0_ADDRESS || "";
-    const owner_2_address = process.env.ACCOUNT_1_ADDRESS || "";
-    const owner_3_address = process.env.ACCOUNT_2_ADDRESS || "";
+    const owner1Pk = process.env.ACCOUNT_0_PK || "";
+    const owner1Address = process.env.ACCOUNT_0_ADDRESS || "";
+    const owner2Address = process.env.ACCOUNT_1_ADDRESS || "";
+    const owner3Address = process.env.ACCOUNT_2_ADDRESS || "";
 
     const safeProvider: SafeProvider = new SafeProvider({ 
         provider: RPC_URL,
-        signer: owner_1_pk,
+        signer: owner1Pk,
       });
 
     const chainId = await safeProvider.getChainId();
@@ -21,7 +21,7 @@ async function main() {
 
     const safeFactory = await SafeFactory.init({
         provider: RPC_URL,
-        signer: owner_1_pk,
+        signer: owner1Pk,
         contractNetworks: {
             // safeVersion: 1.4.1
             // [chainId + '']: {
@@ -51,9 +51,9 @@ async function main() {
 
     const safeAccountConfig: SafeAccountConfig = {
         owners: [
-            owner_1_address,
-            owner_2_address,
-            owner_3_address 
+            owner1Address,
+            owner2Address,
+            owner3Address 
         ],
         threshold: 2
     };

@@ -6,10 +6,7 @@ async function main() {
     
     const RPC_URL = process.env.RPC_URL || "";
     
-    const owner_1_pk = process.env.ACCOUNT_0_PK || "";
-    const owner_1_address = process.env.ACCOUNT_0_ADDRESS || "";
-    const owner_2_address = process.env.ACCOUNT_1_ADDRESS || "";
-    const owner_3_address = process.env.ACCOUNT_2_ADDRESS || "";
+    const owner1Pk = process.env.ACCOUNT_0_PK || "";
     
     const deployedSafeAddress: string = process.env.SAFE_PROXY_ADDRESS || "";
 
@@ -22,7 +19,7 @@ async function main() {
         value: initialFundInWei
     }
 
-    const owner1Signer = new ethers.Wallet(owner_1_pk, ethersProvider);
+    const owner1Signer = new ethers.Wallet(owner1Pk, ethersProvider);
 
     const tx = await owner1Signer.sendTransaction(txParam);
 
