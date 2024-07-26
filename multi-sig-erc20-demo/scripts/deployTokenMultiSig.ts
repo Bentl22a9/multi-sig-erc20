@@ -23,8 +23,6 @@ async function main() {
     throw new Error("Please set all required environment variables.");
   }
 
-  const jsonRpcProvider = new ethers.JsonRpcProvider(RPC_URL);
-
   const safeProvider: SafeProvider = new SafeProvider({ 
       provider: RPC_URL,
       signer: owner1Pk,
