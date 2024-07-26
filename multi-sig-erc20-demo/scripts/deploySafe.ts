@@ -1,21 +1,9 @@
 import Safe, { SafeAccountConfig, SafeFactory, SafeProvider } from "@safe-global/protocol-kit";
 import * as dotenv from "dotenv";
+import { owner1Address, owner1Pk, owner2Address, owner3Address, RPC_URL, safeProvider } from "../common";
 dotenv.config();
 
 async function main() {
-    
-    const RPC_URL = process.env.RPC_URL || "";
-    
-    const owner1Pk = process.env.ACCOUNT_0_PK || "";
-    const owner1Address = process.env.ACCOUNT_0_ADDRESS || "";
-    const owner2Address = process.env.ACCOUNT_1_ADDRESS || "";
-    const owner3Address = process.env.ACCOUNT_2_ADDRESS || "";
-
-    const safeProvider: SafeProvider = new SafeProvider({ 
-        provider: RPC_URL,
-        signer: owner1Pk,
-      });
-
     const chainId = await safeProvider.getChainId();
     console.log(chainId);
 

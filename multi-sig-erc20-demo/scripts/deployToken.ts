@@ -1,25 +1,12 @@
 import { ethers } from "hardhat";
-import Safe, { SafeProvider } from "@safe-global/protocol-kit";
-
 import path from "path";
 import fs from "fs";
 
 import * as dotenv from "dotenv";
+import { ethersProvider, owner1Pk } from "../common";
 dotenv.config();
 
 async function main() {
-
-  const RPC_URL = process.env.RPC_URL || "";
-    
-  const owner1Pk = process.env.ACCOUNT_0_PK || "";
-  const owner1Address = process.env.ACCOUNT_0_ADDRESS || "";
-
-  if (!RPC_URL || !owner1Pk || !owner1Address) {
-    throw new Error("Please set all required environment variables.");
-  }
-
-  const jsonRpcProvider = new ethers.JsonRpcProvider(RPC_URL);
-
   const createCallABIPath = path.resolve(__dirname, "../../safe-smart-account/deployments/custom/CreateCall.json");
   const createCallJson = JSON.parse(fs.readFileSync(createCallABIPath, "utf8"));
   const createCallABI = createCallJson["abi"];
@@ -48,7 +35,7 @@ async function main() {
     to: '0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4' // CreateCall.sol
   };
 
-  const signer1 = new ethers.Wallet(owner1Pk, jsonRpcProvider);
+  const signer1 = new ethers.Wallet(owner1Pk, ethersProvider);
   const res = await signer1.sendTransaction(createCallTxParam);
   const receipt = await res.wait();
   

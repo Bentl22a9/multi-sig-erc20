@@ -1,17 +1,11 @@
-import * as dotenv from "dotenv";
 import { ethers } from "hardhat";
+import { deployedSafeAddress, ethersProvider, owner1Pk } from "../common";
+
+import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
     
-    const RPC_URL = process.env.RPC_URL || "";
-    
-    const owner1Pk = process.env.ACCOUNT_0_PK || "";
-    
-    const deployedSafeAddress: string = process.env.SAFE_PROXY_ADDRESS || "";
-
-    const ethersProvider = new ethers.JsonRpcProvider(RPC_URL);
-
     const initialFundInWei = ethers.parseEther('1');
 
     const txParam = {
@@ -23,7 +17,7 @@ async function main() {
 
     const tx = await owner1Signer.sendTransaction(txParam);
 
-    console.log(`Sending initial fund...`);
+    console.log(`Sending initial fund 💸💸💸`);
     console.log(`Deposit tx: ${tx.hash}`);
 
     const balanceInWei: bigint = await ethersProvider.getBalance(deployedSafeAddress);
