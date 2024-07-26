@@ -18,7 +18,6 @@ async function main() {
     "GM",
     "GM",
     18,
-    ethers.parseUnits("69420", 18),
     ethers.parseUnits("69420", 18)
   ];
   const tokenContractFactory = await ethers.getContractFactory("Token");

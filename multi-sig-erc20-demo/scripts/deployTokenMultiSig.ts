@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import path from "path";
 import fs from "fs";
-import { owner1Pk, owner2Pk } from "../common";
+import { deployedSafeAddress, ethersProvider, owner1Pk, owner2Pk } from "../common";
 import { getSafeFor } from "../utils";
 
 import * as dotenv from "dotenv";
@@ -14,13 +14,12 @@ async function main() {
   const createCallABI = createCallJson["abi"];
 
   // safe-smart-account
-  const createCallContract = new ethers.Contract('0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4',createCallABI);
+  const createCallContract = new ethers.Contract('0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4', createCallABI);
 
   const constructorArgs = [
     "GM",
     "GM",
     18,
-    ethers.parseUnits("69420", 18),
     ethers.parseUnits("69420", 18)
   ];
   const tokenContractFactory = await ethers.getContractFactory("Token");
@@ -70,14 +69,24 @@ async function main() {
     }
   });
 
+  var tokenContractAddress: string = '';
   if (log) {
-    const parsedLog = iface.parseLog(log);
-    const newContractAddress = parsedLog?.args.newContract;
-    console.log("Token contract has been deployed at:", newContractAddress);
+    const parsedLog = iface.parseLog(log)!;
+    tokenContractAddress = parsedLog.args.newContract;
+      console.log("Token contract has been deployed at:", tokenContractAddress);
   } else {
     console.error("ContractCreation event not found in logs");
   }
 
+  if (tokenContractAddress.length == 0) throw new Error('Token contract not found');
+
+  const token = tokenContractFactory.attach(tokenContractAddress);
+
+  const owner1Signer = new ethers.Wallet(owner1Pk, ethersProvider);
+
+  const owner = await token.connect(owner1Signer).getOwner();
+  
+  if (owner === deployedSafeAddress) console.log('Deployed contract owner matches safe multi-sig address 👏👏👏');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
