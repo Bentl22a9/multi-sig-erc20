@@ -13,9 +13,11 @@ export const owner2Address = process.env.ACCOUNT_1_ADDRESS || "";
 
 export const owner3Address = process.env.ACCOUNT_2_ADDRESS || "";
   
-export const deployedSafeAddress: string = process.env.SAFE_PROXY_ADDRESS || "";
+export const deployedSafeAddress = process.env.SAFE_PROXY_ADDRESS || "";
 
-export const safeProvider: SafeProvider = new SafeProvider({ 
+export const tokenContractAddress = process.env.TOKEN_CONTRACT_ADDRESS || "";
+
+export const safeProvider = new SafeProvider({ 
     provider: RPC_URL,
     signer: owner1Pk,
 });
