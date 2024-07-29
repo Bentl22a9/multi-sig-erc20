@@ -11,9 +11,10 @@ contract Token is ERC20Capped, Ownable {
     constructor(
         string memory name,
         string memory symbol,
+        address owner,
         uint8 _decimals,
         uint256 maxSupply
-    ) ERC20(name, symbol) ERC20Capped(maxSupply) Ownable(msg.sender) {
+    ) ERC20(name, symbol) ERC20Capped(maxSupply) Ownable(owner) {
         _tokenDecimals = _decimals;
     }
 
