@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 import * as dotenv from "dotenv";
-import { ethersProvider, owner1Pk } from "../common";
+import { ethersProvider, owner1Address, owner1Pk } from "../common";
 dotenv.config();
 
 async function main() {
@@ -11,12 +11,13 @@ async function main() {
   const createCallJson = JSON.parse(fs.readFileSync(createCallABIPath, "utf8"));
   const createCallABI = createCallJson["abi"];
 
-  // from safe-smart-account
-  const createCallContract = new ethers.Contract('0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4',createCallABI);
+  // from safe-smart-account - CreateCall.sol
+  const createCallContract = new ethers.Contract('0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4', createCallABI);
 
   const constructorArgs = [
     "GM",
     "GM",
+    owner1Address,
     18,
     ethers.parseUnits("69420", 18)
   ];
@@ -56,6 +57,7 @@ async function main() {
     const parsedLog = iface.parseLog(log);
     const newContractAddress = parsedLog?.args.newContract;
     console.log("Token contract has been deployed at:", newContractAddress);
+    console.log('🍥 Copy and paste the contract address to .env')
   } else {
     console.error("ContractCreation event not found in logs");
   }
