@@ -4,7 +4,7 @@
   "description": "Hardhat solidity contract development skeleton",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky install"
+    "prepare": "cd .. && husky install multi-sig-erc20-demo/.husky"
   },
   "keywords": [
     "hardhat",
