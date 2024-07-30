@@ -26,7 +26,7 @@ export async function mint({ amount, address } : { amount?: string, address?: st
 
     const mintTxData = token.interface.encodeFunctionData(
         "mint",
-        [address, amount]
+        [address, unitAmount]
     );
 
     const safeTxData: MetaTransactionData = {

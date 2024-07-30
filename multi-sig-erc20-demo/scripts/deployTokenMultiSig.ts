@@ -11,7 +11,7 @@ dotenv.config();
 
 async function main() {
 
-  const createCallABIPath = path.resolve(__dirname, "../../safe-smart-account/deployments/custom/CreateCall.json");
+  const createCallABIPath = path.resolve(__dirname, "../../safe-smart-account/deployments/localhost/CreateCall.json");
   const createCallJson = JSON.parse(fs.readFileSync(createCallABIPath, "utf8"));
   const createCallABI = createCallJson["abi"];
 
