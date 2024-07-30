@@ -1,0 +1,3 @@
+[submodule "safe-smart-account"]
+	path = safe-smart-account
+	url = https://github.com/safe-global/safe-smart-account.git
