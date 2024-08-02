@@ -12,6 +12,7 @@ export const owner2Pk = process.env.ACCOUNT_1_PK || "";
 export const owner2Address = process.env.ACCOUNT_1_ADDRESS || "";
 
 export const owner3Address = process.env.ACCOUNT_2_ADDRESS || "";
+export const owner3Pk = process.env.ACCOUNT_2_PK || "";
   
 export const deployedSafeAddress = process.env.SAFE_PROXY_ADDRESS || "";
 
