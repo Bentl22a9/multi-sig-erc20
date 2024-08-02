@@ -23,11 +23,12 @@ contract TokenLock is Ownable {
   event TokenLockRevoked(uint256 index, uint256 amount);
   event AllTokenLocksRevoked(uint256 amount);
 
+  // solhint-disable-next-line func-visibility
   constructor(
     address _token,
     address _owner,
     address _beneficiary
-  ) public Ownable(_owner) {
+  ) Ownable(_owner) {
     TOKEN = ERC20(_token);
     BENEFICIARY = _beneficiary;
   }
