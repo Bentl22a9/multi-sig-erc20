@@ -10,142 +10,308 @@ import { deployedSafeAddress, ethersProvider, owner1Address, owner1Pk, owner2Add
 import { Token, TokenLock } from "../typechain-types";
 import Safe, { SafeAccountConfig, SafeFactory } from "@safe-global/protocol-kit";
 import { getSafeFor } from "../utils";
+import { MetaTransactionData } from "@safe-global/safe-core-sdk-types";
 
 describe("TokenLock", function () {
+  const owner1Wallet = new ethers.NonceManager(new ethers.Wallet(owner1Pk, ethersProvider));
 
-  async function deploySafeFixture() {
-    const chainId = await safeProvider.getChainId();
-  
-      const safeFactory = await SafeFactory.init({
-          provider: RPC_URL,
-          signer: owner1Pk,
-          contractNetworks: {
-              // safeVersion: 1.4.1
-              // [chainId + '']: {
-              //     safeSingletonAddress: '0xa92d6282964e7c38D518ed080136dA6006285224',
-              //     safeProxyFactoryAddress: '0x484E6B9EB1C7156125496e471DdB9eE967b9bd2F',
-              //     multiSendAddress: '0x413399D067d3789D75c5883707eAb1721AA81b70',
-              //     multiSendCallOnlyAddress: '0xA3FDA5Ce7852B0CE3370EF39DaA51B9F556c38F4',
-              //     fallbackHandlerAddress: '0xdeF3cbD5b6a87e2A4158D771F42a8ce793570DFb',
-              //     signMessageLibAddress: '0x1F4121813cb8848Ce356c50cffd1f19610FEc21c',
-              //     createCallAddress: '0xD2175A68dD1f70da35aE35e7E5a1da8af9d4E70C',
-              //     simulateTxAccessorAddress: '0xC3555d006Fe4280208340f4865390A2eC368AA12',
-              // }
-  
-              // safeVersion: 1.3.0
-              [chainId + '']: {
-                  safeSingletonAddress: '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552', 
-                  safeProxyFactoryAddress: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
-                  multiSendAddress: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761',
-                  multiSendCallOnlyAddress: '0x40A2aCCbd92BCA938b02010E17A5b8929b49130D',
-                  fallbackHandlerAddress: '0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4',
-                  signMessageLibAddress: '0xA65387F16B013cf2Af4605Ad8aA5ec25a2cbA3a2',
-                  createCallAddress: '0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4',
-                  simulateTxAccessorAddress: '0x59AD6735bCd8152B84860Cb256dD9e96b85F69Da',
-              }
-          }
-      });
-  
-      const safeAccountConfig: SafeAccountConfig = {
-          owners: [
-              owner1Address,
-              owner2Address,
-              owner3Address 
-          ],
-          threshold: 2
-      };
-  
-      try {
-        await safeFactory.deploySafe({ safeAccountConfig });
-      } catch (error) {
-        console.error("🚨🚨🚨 Safe proxy already exists!");
-      }
-
-      const safeList = [
-        await getSafeFor(owner1Pk),
-        await getSafeFor(owner2Pk),
-        await getSafeFor(owner3Pk)
-      ];
-
-      const safeAddress = await safeList[0].getAddress();
-      console.log("🍥 Safe has been deployed at", safeAddress);
-
-      const owner1Wallet = new ethers.Wallet(owner1Pk, ethersProvider);
-      
-      const initialFundInWei = ethers.parseEther('100');
-
-      const txParam = {
-          to: safeAddress,
-          value: initialFundInWei
-      }
-
-      const tx = await owner1Wallet.sendTransaction(txParam);
-      console.log(`Sending initial fund 💸💸💸`);
-
-      return safeList; 
+  async function approveTx(hash: string, safe: Safe) {
+    const txRes = await safe.approveTransactionHash(hash);
+    await txRes.transactionResponse?.wait();
   }
 
-  async function deployTokenFixture(safe: string) {
-    const owner1Wallet = new ethers.Wallet(owner1Pk, ethersProvider);
+  async function sendMultiSigTx(safeTxData: MetaTransactionData) {
+    const safe1 = await getSafeFor(owner1Pk);
+    const safe2 = await getSafeFor(owner2Pk);
 
-    const constructorArgs = [
+    const safeTx = await safe1.createTransaction({ transactions: [safeTxData] });
+    const safeTxHash = await safe1.getTransactionHash(safeTx);
+
+    await Promise.all([safe1, safe2].map((safe) => approveTx(safeTxHash, safe)));
+
+    const approvedBy = await safe1.getOwnersWhoApprovedTx(safeTxHash);
+    console.log(`✅ approved by - ${approvedBy}`);
+
+    const execTxRes = await safe1.executeTransaction(safeTx);
+    return await execTxRes.transactionResponse?.wait();
+  }
+
+  async function deployContractsFixture() {
+    // Safe
+    const chainId = await safeProvider.getChainId();
+  
+    const safeFactory = await SafeFactory.init({
+        provider: RPC_URL,
+        signer: owner1Pk,
+        contractNetworks: {
+            // safeVersion: 1.4.1
+            // [chainId + '']: {
+            //     safeSingletonAddress: '0xa92d6282964e7c38D518ed080136dA6006285224',
+            //     safeProxyFactoryAddress: '0x484E6B9EB1C7156125496e471DdB9eE967b9bd2F',
+            //     multiSendAddress: '0x413399D067d3789D75c5883707eAb1721AA81b70',
+            //     multiSendCallOnlyAddress: '0xA3FDA5Ce7852B0CE3370EF39DaA51B9F556c38F4',
+            //     fallbackHandlerAddress: '0xdeF3cbD5b6a87e2A4158D771F42a8ce793570DFb',
+            //     signMessageLibAddress: '0x1F4121813cb8848Ce356c50cffd1f19610FEc21c',
+            //     createCallAddress: '0xD2175A68dD1f70da35aE35e7E5a1da8af9d4E70C',
+            //     simulateTxAccessorAddress: '0xC3555d006Fe4280208340f4865390A2eC368AA12',
+            // }
+
+            // safeVersion: 1.3.0
+            [chainId + '']: {
+                safeSingletonAddress: '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552', 
+                safeProxyFactoryAddress: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
+                multiSendAddress: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761',
+                multiSendCallOnlyAddress: '0x40A2aCCbd92BCA938b02010E17A5b8929b49130D',
+                fallbackHandlerAddress: '0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4',
+                signMessageLibAddress: '0xA65387F16B013cf2Af4605Ad8aA5ec25a2cbA3a2',
+                createCallAddress: '0x7cbB62EaA69F79e6873cD1ecB2392971036cFAa4',
+                simulateTxAccessorAddress: '0x59AD6735bCd8152B84860Cb256dD9e96b85F69Da',
+            }
+        }
+    });
+  
+    const safeAccountConfig: SafeAccountConfig = {
+        owners: [
+            owner1Address,
+            owner2Address,
+            owner3Address 
+        ],
+        threshold: 2
+    };
+    
+    try {
+      await safeFactory.deploySafe({ 
+        safeAccountConfig,
+      });
+    } catch (error) {
+      console.error("🚨🚨🚨 Safe has already been deployed!");
+    }
+
+    const safeList = [
+      await getSafeFor(owner1Pk),
+      await getSafeFor(owner2Pk),
+      await getSafeFor(owner3Pk)
+    ];
+
+    const safeAddress = await safeList[0].getAddress();
+    console.log("🍥 Safe has been deployed at", safeAddress);
+    
+    const initialFundInWei = ethers.parseEther('100');
+
+    const txParam = {
+        to: safeAddress,
+        value: initialFundInWei
+    }
+
+    const tx = await owner1Wallet.sendTransaction(txParam);
+    console.log(`Sending initial fund 💸💸💸`);
+
+    // Token
+    const tokenConstrucutorArgs = [
       "GM",
       "GM",
-      safe,
+      safeAddress,
       18,
       ethers.parseUnits("69420", 18)
     ];
 
     const Token = await ethers.getContractFactory("Token", owner1Wallet);
-    const token: Token = await Token.deploy(...constructorArgs);
+    const token: Token = await Token.deploy(...tokenConstrucutorArgs);
     const tokenAddress = await token.getAddress();
 
-    console.log(`🍥 Token deployed at ${tokenAddress} by ${owner1Wallet.address}`);
+    console.log(`🍥 Token deployed at ${tokenAddress} by ${await owner1Wallet.getAddress()}`);
 
-    return { token };
-  } 
-
-  async function deployTokenLockFixture(
-    token: string,
-    safe: string
-  ) {
-    const owner1Wallet = new ethers.Wallet(owner1Pk, ethersProvider);
-
-    const constructorArgs = [
-      token,
-      safe,
-      safe
+    // TokenLock
+    const tokenLockConstructorArgs = [
+      tokenAddress,
+      safeAddress,
+      safeAddress
     ];
 
     const TokenLock = await ethers.getContractFactory("TokenLock", owner1Wallet);
-    const tokenLock: TokenLock = await TokenLock.deploy(...constructorArgs);
+    const tokenLock: TokenLock = await TokenLock.deploy(...tokenLockConstructorArgs);
     const tokenLockAddress = await tokenLock.getAddress();
 
-    console.log(`🍥 TokenLock has been deployed at ${tokenLockAddress} by ${owner1Wallet.address}`);
+    console.log(`🍥 TokenLock has been deployed at ${tokenLockAddress} by ${await owner1Wallet.getAddress()}`);
+
+    return {
+      safe: safeList,
+      token,
+      tokenLock
+    };
   }
 
   describe("Deployment", function () {
-    it("Should match pre-defined safe address", async function () {
-      const [safe1] = await loadFixture(deploySafeFixture);
-
-      expect(await safe1.getAddress()).to.equal(deployedSafeAddress);
-    });
-
-    it("Should hold initial fund", async function () {
-      const [safe1] = await loadFixture(deploySafeFixture);
+    it("Should safeAddress hold initial fund", async function () {
+      const { safe } = await loadFixture(deployContractsFixture);
+      const [safe1] = safe;
       const safeAddress = await safe1.getAddress();
 
       expect(await ethersProvider.getBalance(safeAddress)).to.greaterThan(0);
     });
 
-    // it("", async function () {
-    //   const { token, tokenAddress } = await deployTokenFixture();
+    it("Should Token owner match the safe address", async function () {
+      const { safe, token } = await loadFixture(deployContractsFixture);
+      const [safe1] = safe;
+      const safeAddress = await safe1.getAddress();
+      
+      expect(await token.connect(owner1Wallet).getOwner()).to.equal(safeAddress);
+    });
 
-    //   console.log(tokenAddress);
-    //   console.log(await token.getOwner());
+
+    it("Should TokenLock match constructor args", async function () {
+      const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
+      const [safe1] = safe;
+      const safeAddress = await safe1.getAddress();
+      const tokenAddress = await token.getAddress();
+
+      expect(await tokenLock.connect(owner1Wallet).getOwner()).to.equal(safeAddress);
+      expect(await tokenLock.connect(owner1Wallet).getToken()).to.equal(tokenAddress);
+      expect(await tokenLock.connect(owner1Wallet).getBeneficiary()).to.equal(safeAddress);
+    });
+
+    // it("Should mint gets reverted by a non-owner", async function () {
+    //   const { safe, token } = await loadFixture(deployContractsFixture);
+    //   const [safe1] = safe;
+    //   const safeAddress = await safe1.getAddress();
+    //   const decimals = await token.decimals();
+    //   console.log(decimals);
+
+    //   await expect(token.connect(owner1Wallet).mint(safeAddress, ethers.parseUnits('1', decimals))).to.be.reverted;
     // });
+
+    it("Should safeAddress be able to mint", async function () {
+      const { safe, token } = await loadFixture(deployContractsFixture);
+      const [safe1] = safe;
+      const safeAddress = await safe1.getAddress();
+      const decimals = await token.connect(owner1Wallet).decimals();
+
+      const mintAmount = ethers.parseUnits("100", decimals);
+
+      const mintTxData = token.interface.encodeFunctionData(
+        "mint",
+        [safeAddress, mintAmount]
+      );
+
+      const safeTxData: MetaTransactionData = {
+        to: await token.getAddress(),
+        value: "0",
+        data: mintTxData
+      };
+
+      const receipt = await sendMultiSigTx(safeTxData);
+      expect(await token.connect(owner1Wallet).balanceOf(safeAddress)).to.be.equal(ethers.parseUnits("100", decimals));
+    });
   });
 
-  describe
+  describe("TokenLock features", async function() {
+    // it("Should revert non-owner lock", async function() {
+    //   const { token, tokenLock } = await loadFixture(deployContractsFixture);
+    //   const decimals = await token.connect(owner1Wallet).decimals();
+      
+    //   const unitAmount = ethers.parseUnits("50", decimals);
+
+    //   const currentTimestamp = Math.floor(Date.now() / 1000);
+    //   const releaseTime = currentTimestamp + 24 * 12 * 60;
+
+    //   await tokenLock.connect(owner1Wallet).lock(
+    //     unitAmount,
+    //     releaseTime
+    //   );
+
+    // });
+
+    it("Should have expected allowance after approve", async function() {
+      const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
+      const [safe1] = safe;
+      const safeAddress = await safe1.getAddress();
+      const tokenAddress = await token.getAddress();
+      const tokenLockAddress = await tokenLock.getAddress();
+
+      const approveTx = token.interface.encodeFunctionData(
+        "approve",
+        [tokenLockAddress, ethers.MaxUint256]
+      )
+
+      const safeTxData: MetaTransactionData = {
+        to: tokenAddress,
+        value: '0',
+        data: approveTx
+      };
+
+      await sendMultiSigTx(safeTxData);
+
+      expect(await token.connect(owner1Wallet).allowance(safeAddress, tokenLockAddress)).to.be.equal(ethers.MaxUint256);
+    });
+
+    it("Should safeAddress be able to lock", async function() {
+      const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
+      const [safe1] = safe;
+      const safeAddress = await safe1.getAddress();
+
+      const decimals = await token.connect(owner1Wallet).decimals();
+      
+      const unitAmount = ethers.parseUnits("50", decimals);
+      console.log(unitAmount);
+
+      // const currentTimestamp = await getCurrentBlockTimestamp();
+      const currentTimestamp = await time.latest();
+      console.log(`🕖 currentTimestamp - ${currentTimestamp}`);
+      const releaseTime = currentTimestamp + 24 * 12 * 60;
+
+      const lockTxData = tokenLock.interface.encodeFunctionData(
+        "lock",
+        [unitAmount, releaseTime]
+      );
+
+      const safeTxData: MetaTransactionData = {
+        to: await tokenLock.getAddress(),
+        value: "0",
+        data: lockTxData
+      };
+
+      await sendMultiSigTx(safeTxData);
+
+      const locks = await tokenLock.connect(owner1Wallet).getLocks();
+      const newLock = locks[0];
+
+      expect(await token.connect(owner1Wallet).balanceOf(tokenLock)).to.be.equal(unitAmount);
+      expect(newLock.amount).to.be.equal(unitAmount);
+      expect(newLock.releaseTime).to.be.equal(releaseTime);
+    });
+
+    // it("Should safeAddress be able to lock", async function() {
+    //   const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
+    //   const [safe1] = safe;
+    //   const safeAddress = await safe1.getAddress();
+
+    //   const decimals = await token.connect(owner1Wallet).decimals();
+      
+    //   const unitAmount = ethers.parseUnits("50", decimals);
+    //   console.log(unitAmount);
+
+    //   // const currentTimestamp = await getCurrentBlockTimestamp();
+    //   const currentTimestamp = await time.latest();
+    //   console.log(`🕖 currentTimestamp - ${currentTimestamp}`);
+    //   const releaseTime = currentTimestamp + 24 * 12 * 60;
+
+    //   const lockTxData = tokenLock.interface.encodeFunctionData(
+    //     "lock",
+    //     [unitAmount, BigInt(`${releaseTime}`)]
+    //   );
+
+    //   const safeTxData: MetaTransactionData = {
+    //     to: await tokenLock.getAddress(),
+    //     value: "0",
+    //     data: lockTxData
+    //   };
+
+    //   await sendMultiSigTx(safeTxData);
+
+    //   const locks = await tokenLock.connect(owner1Wallet).getLocks();
+    //   console.log(locks);
+
+    // });
+  });
 
 });

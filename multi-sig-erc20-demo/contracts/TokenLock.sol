@@ -37,9 +37,15 @@ contract TokenLock is Ownable {
     return owner();
   }
 
-  function lock(uint256 amount, uint256 releaseTime) external onlyOwner {
-    console.log("lock amount - %s, releaseTime - %s", amount, releaseTime);
+  function getToken() public view returns (address) {
+    return address(TOKEN);
+  }
 
+  function getBeneficiary() public view returns (address) {
+    return BENEFICIARY;
+  }
+
+  function lock(uint256 amount, uint256 releaseTime) external onlyOwner {
     if (releaseTime <= block.timestamp) {
       revert ReleaseTimeInPast();
     }
