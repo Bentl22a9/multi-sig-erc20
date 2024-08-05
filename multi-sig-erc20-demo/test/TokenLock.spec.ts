@@ -15,6 +15,10 @@ import { MetaTransactionData } from "@safe-global/safe-core-sdk-types";
 describe("TokenLock", function () {
   const owner1Wallet = new ethers.NonceManager(new ethers.Wallet(owner1Pk, ethersProvider));
 
+  this.beforeEach(async function () {
+    Object.assign(this, await loadFixture(deployContractsFixture));
+  });
+
   async function approveTx(hash: string, safe: Safe) {
     const txRes = await safe.approveTransactionHash(hash);
     await txRes.transactionResponse?.wait();
@@ -143,64 +147,60 @@ describe("TokenLock", function () {
 
   describe("Deployment", function () {
     it("Should safeAddress hold initial fund", async function () {
-      const { safe } = await loadFixture(deployContractsFixture);
-      const [safe1] = safe;
+      const [safe1] = this.safe;
       const safeAddress = await safe1.getAddress();
 
       expect(await ethersProvider.getBalance(safeAddress)).to.greaterThan(0);
     });
 
     it("Should Token owner match the safe address", async function () {
-      const { safe, token } = await loadFixture(deployContractsFixture);
-      const [safe1] = safe;
+      const [safe1] = this.safe;
       const safeAddress = await safe1.getAddress();
       
-      expect(await token.connect(owner1Wallet).getOwner()).to.equal(safeAddress);
+      expect(await this.token.connect(owner1Wallet).getOwner()).to.equal(safeAddress);
     });
-
 
     it("Should TokenLock match constructor args", async function () {
-      const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
-      const [safe1] = safe;
+      const [safe1] = this.safe;
       const safeAddress = await safe1.getAddress();
-      const tokenAddress = await token.getAddress();
+      const tokenAddress = await this.token.getAddress();
 
-      expect(await tokenLock.connect(owner1Wallet).getOwner()).to.equal(safeAddress);
-      expect(await tokenLock.connect(owner1Wallet).getToken()).to.equal(tokenAddress);
-      expect(await tokenLock.connect(owner1Wallet).getBeneficiary()).to.equal(safeAddress);
+      expect(await this.tokenLock.connect(owner1Wallet).getOwner()).to.equal(safeAddress);
+      expect(await this.tokenLock.connect(owner1Wallet).getToken()).to.equal(tokenAddress);
+      expect(await this.tokenLock.connect(owner1Wallet).getBeneficiary()).to.equal(safeAddress);
     });
 
-    // it("Should mint gets reverted by a non-owner", async function () {
-    //   const { safe, token } = await loadFixture(deployContractsFixture);
-    //   const [safe1] = safe;
-    //   const safeAddress = await safe1.getAddress();
-    //   const decimals = await token.decimals();
-    //   console.log(decimals);
+    it("Should mint be reverted by a non-owner", async function () {
+      const [safe1] = this.safe;
+      const safeAddress = await safe1.getAddress();
+      const decimals = await this.token.decimals();
 
-    //   await expect(token.connect(owner1Wallet).mint(safeAddress, ethers.parseUnits('1', decimals))).to.be.reverted;
-    // });
+      await expect(this.token.connect(owner1Wallet).mint(safeAddress, ethers.parseUnits('1', decimals))).to.be.revertedWithCustomError(
+        this.token,
+        "OwnableUnauthorizedAccount"
+      ).withArgs(await owner1Wallet.getAddress());
+    });
 
     it("Should safeAddress be able to mint", async function () {
-      const { safe, token } = await loadFixture(deployContractsFixture);
-      const [safe1] = safe;
+      const [safe1] = this.safe;
       const safeAddress = await safe1.getAddress();
-      const decimals = await token.connect(owner1Wallet).decimals();
+      const decimals = await this.token.connect(owner1Wallet).decimals();
 
       const mintAmount = ethers.parseUnits("100", decimals);
 
-      const mintTxData = token.interface.encodeFunctionData(
+      const mintTxData = this.token.interface.encodeFunctionData(
         "mint",
         [safeAddress, mintAmount]
       );
 
       const safeTxData: MetaTransactionData = {
-        to: await token.getAddress(),
+        to: await this.token.getAddress(),
         value: "0",
         data: mintTxData
       };
 
       const receipt = await sendMultiSigTx(safeTxData);
-      expect(await token.connect(owner1Wallet).balanceOf(safeAddress)).to.be.equal(ethers.parseUnits("100", decimals));
+      expect(await this.token.connect(owner1Wallet).balanceOf(safeAddress)).to.be.equal(ethers.parseUnits("100", decimals));
     });
   });
 
@@ -222,13 +222,12 @@ describe("TokenLock", function () {
     // });
 
     it("Should have expected allowance after approve", async function() {
-      const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
-      const [safe1] = safe;
+      const [safe1] = this.safe;
       const safeAddress = await safe1.getAddress();
-      const tokenAddress = await token.getAddress();
-      const tokenLockAddress = await tokenLock.getAddress();
+      const tokenAddress = await this.token.getAddress();
+      const tokenLockAddress = await this.tokenLock.getAddress();
 
-      const approveTx = token.interface.encodeFunctionData(
+      const approveTx = this.token.interface.encodeFunctionData(
         "approve",
         [tokenLockAddress, ethers.MaxUint256]
       )
@@ -241,41 +240,36 @@ describe("TokenLock", function () {
 
       await sendMultiSigTx(safeTxData);
 
-      expect(await token.connect(owner1Wallet).allowance(safeAddress, tokenLockAddress)).to.be.equal(ethers.MaxUint256);
+      expect(await this.token.connect(owner1Wallet).allowance(safeAddress, tokenLockAddress)).to.be.equal(ethers.MaxUint256);
     });
 
     it("Should safeAddress be able to lock", async function() {
-      const { safe, token, tokenLock } = await loadFixture(deployContractsFixture);
-      const [safe1] = safe;
-      const safeAddress = await safe1.getAddress();
-
-      const decimals = await token.connect(owner1Wallet).decimals();
+      const decimals = await this.token.connect(owner1Wallet).decimals();
       
       const unitAmount = ethers.parseUnits("50", decimals);
       console.log(unitAmount);
 
-      // const currentTimestamp = await getCurrentBlockTimestamp();
       const currentTimestamp = await time.latest();
       console.log(`🕖 currentTimestamp - ${currentTimestamp}`);
       const releaseTime = currentTimestamp + 24 * 12 * 60;
 
-      const lockTxData = tokenLock.interface.encodeFunctionData(
+      const lockTxData = this.tokenLock.interface.encodeFunctionData(
         "lock",
         [unitAmount, releaseTime]
       );
 
       const safeTxData: MetaTransactionData = {
-        to: await tokenLock.getAddress(),
+        to: await this.tokenLock.getAddress(),
         value: "0",
         data: lockTxData
       };
 
       await sendMultiSigTx(safeTxData);
 
-      const locks = await tokenLock.connect(owner1Wallet).getLocks();
+      const locks = await this.tokenLock.connect(owner1Wallet).getLocks();
       const newLock = locks[0];
 
-      expect(await token.connect(owner1Wallet).balanceOf(tokenLock)).to.be.equal(unitAmount);
+      expect(await this.token.connect(owner1Wallet).balanceOf(this.tokenLock)).to.be.equal(unitAmount);
       expect(newLock.amount).to.be.equal(unitAmount);
       expect(newLock.releaseTime).to.be.equal(releaseTime);
     });
