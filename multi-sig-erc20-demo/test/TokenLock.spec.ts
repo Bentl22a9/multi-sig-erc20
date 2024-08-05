@@ -399,6 +399,27 @@ describe("TokenLock", function () {
       await expect(sendMultiSigTx(safeTxData)).to.emit(this.tokenLock, "TokenLockRevoked")
         .withArgs(index, ethers.parseUnits("50", decimals));
     });
+
+    it("Should revokeAllLocks emit AllTokenLocksRevoked event", async function() {
+      const decimals = await this.token.connect(owner1Wallet).decimals();
+
+      const currentTimestamp = await getTimestamp();
+      await lock(this.token, this.tokenLock, "50", BigInt(currentTimestamp + 24 * 60 * 60));
+      await lock(this.token, this.tokenLock, "25", BigInt(currentTimestamp + 12 * 60 * 60));
+
+      const revokeAllLocksTx = this.tokenLock.interface.encodeFunctionData(
+        "revokeAllLocks"
+      );
+
+      const safeTxData: MetaTransactionData = {
+        to: await this.tokenLock.getAddress(),
+        value: '0',
+        data: revokeAllLocksTx
+      };
+
+      await expect(sendMultiSigTx(safeTxData)).to.emit(this.tokenLock, "AllTokenLocksRevoked")
+        .withArgs(ethers.parseUnits("75", decimals));
+    });
     
   });
 });
