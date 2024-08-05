@@ -1,6 +1,5 @@
 import {
-  time,
-  loadFixture,
+  loadFixture, time,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 import { expect } from "chai";
@@ -13,11 +12,6 @@ import { getSafeFor } from "../utils";
 
 describe("TokenLock", function () {
   const owner1Wallet = new ethers.NonceManager(new ethers.Wallet(owner1Pk, ethers.provider));
-
-  async function getTimestamp() {
-    const block = await ethers.provider.getBlock('latest');
-    return block ? block.timestamp : 0;
-  }
 
   this.beforeEach(async function () {
     Object.assign(this, await loadFixture(deployContractsFixture));
@@ -128,7 +122,7 @@ describe("TokenLock", function () {
     };
 
     await owner1Wallet.sendTransaction(txParam);
-    console.log(`Sending initial fund 💸💸💸`);
+    console.log(`🍥 Sending initial fund 💸💸💸`);
 
     // Token
     const tokenConstrucutorArgs = [
@@ -175,7 +169,7 @@ describe("TokenLock", function () {
     };
 
     await sendMultiSigTx(safeTxDataMint);
-    console.log(`🍥 minted max supply to safeAddress - ${await token.connect(owner1Wallet).balanceOf(safeAddress)}`);
+    console.log(`🍥 Minted max supply to safeAddress - ${await token.connect(owner1Wallet).balanceOf(safeAddress)}`);
 
     // Approve infinite amount to TokenLock
     const approveTx = token.interface.encodeFunctionData(
@@ -190,7 +184,7 @@ describe("TokenLock", function () {
     };
 
     await sendMultiSigTx(safeTxDataApprove);
-    console.log(`🍥 approved max amount: owner - safeAddress, spender - TokenLock`);
+    console.log(`🍥 Approved max amount: owner - safeAddress, spender - TokenLock`);
 
     return {
       safe: safeList,
@@ -243,7 +237,7 @@ describe("TokenLock", function () {
       
       const unitAmount = ethers.parseUnits("50", decimals);
 
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
       const releaseTime = currentTimestamp + 24 * 12 * 60;
 
       await expect(tokenLock.connect(owner1Wallet).lock(
@@ -264,7 +258,7 @@ describe("TokenLock", function () {
 
       const unitAmount = ethers.parseUnits("50", decimals);
 
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
       const releaseTime = currentTimestamp + 24 * 60 * 60; // 1 day
       
       const lockTxData = this.tokenLock.interface.encodeFunctionData(
@@ -283,7 +277,7 @@ describe("TokenLock", function () {
     });
 
     it("Should safeAddress be able to lock multiple times", async function() {
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
       
       await lock(this.token, this.tokenLock, "50", BigInt(currentTimestamp + 24 * 60 * 60));
       await lock(this.token, this.tokenLock, "25", BigInt(currentTimestamp + 12 * 60 * 60));
@@ -294,7 +288,7 @@ describe("TokenLock", function () {
 
     it("Should revert for invalid release time", async function() {
       const decimals = await this.token.connect(owner1Wallet).decimals();
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
 
       const unitAmount = ethers.parseUnits("10", decimals);
       const invalidReleaseTime = currentTimestamp - 24 * 60 * 60;
@@ -316,7 +310,7 @@ describe("TokenLock", function () {
     });
 
     it("Should return valid active lock indices", async function() {
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
 
       await lock(this.token, this.tokenLock, "50", BigInt(currentTimestamp + 24 * 60 * 60));
       await lock(this.token, this.tokenLock, "25", BigInt(currentTimestamp + 12 * 60 * 60));
@@ -339,18 +333,18 @@ describe("TokenLock", function () {
 
     it("Should increase block timestamp by 13 hours", async function() { 
 
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
 
       await ethers.provider.send("evm_increaseTime", [13 * 60 * 60]); // 13 hours
       await ethers.provider.send("evm_mine", []);
   
-      const laterTimestamp = await getTimestamp();
+      const laterTimestamp = await time.latest();
       
       expect(laterTimestamp).to.be.greaterThanOrEqual(currentTimestamp + 13 * 60 * 60);
     });
 
     it("Should release fund for Locks where its releaseTime past block timestamp", async function() {
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
       await lock(this.token, this.tokenLock, "50", BigInt(currentTimestamp + 24 * 60 * 60));
       await lock(this.token, this.tokenLock, "25", BigInt(currentTimestamp + 12 * 60 * 60));
 
@@ -377,7 +371,7 @@ describe("TokenLock", function () {
     });
 
     it("Should revokeLock emit TokenLockRevoked event", async function() {
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
       await lock(this.token, this.tokenLock, "50", BigInt(currentTimestamp + 24 * 60 * 60));
       await lock(this.token, this.tokenLock, "25", BigInt(currentTimestamp + 12 * 60 * 60));
 
@@ -403,7 +397,7 @@ describe("TokenLock", function () {
     it("Should revokeAllLocks emit AllTokenLocksRevoked event", async function() {
       const decimals = await this.token.connect(owner1Wallet).decimals();
 
-      const currentTimestamp = await getTimestamp();
+      const currentTimestamp = await time.latest();
       await lock(this.token, this.tokenLock, "50", BigInt(currentTimestamp + 24 * 60 * 60));
       await lock(this.token, this.tokenLock, "25", BigInt(currentTimestamp + 12 * 60 * 60));
 
