@@ -1,20 +1,28 @@
-# ERC20 Management with a Safe Multi-sig Account
+# Demo: Safe Multi-Sig Controlled ERC20 Lock and Release in Hardhat
 
-Explore ERC20 token lock managed by a multisig account powered by <a href="https://github.com/safe-global/safe-smart-account">Safe-Smart-Account</a> utilising  <a href="https://hardhat.org/">Hardhat</a>
+## Description
+
+This repository presents a demonstration project using <a href="https://hardhat.org/">Hardhat</a> to implement and test ERC20 token lock and release features controlled by <a href="https://github.com/safe-global/safe-smart-account">Safe (Gnosis Safe) multi-signature wallets</a>.
+
+## Prerequisites
+
+<ul>
+    <li>Node v18+</li>
+    <li>Git</li>
+</ul>
 
 ## Installation
 
-### Node Version
-18
+Clone the repository and intialise the submodule:
 
-### Git
+
     $ git clone https://github.com/Bentl22a9/multi-sig-erc20.git
     $ cd ./multi-sig-erc20
     $ git submodule init
     $ git submodule update
 
 
-### Node Modules
+### Install dependencies
 
 multi-sig-erc20-demo
 
@@ -27,14 +35,18 @@ safe-smart-account
     $ git checkout v1.3.0-libs.0 // The safe-smart-account version used for the project
     $ yarn 
 
-### ENV
+### .env
 
-Copy provided .env files into each directory root
+    $ cd ./safe-smart-account
+    $ cp ./.env.sample .env
 
+Open the `.env` file and insert your values:)
 
-## Deploy Safe Contracts to Local Hardhat Network
+## Usage
 
-Spin local hardhat node
+### Deploying safe contracts to the local hardhat network
+
+Spin the local hardhat node
 
     $ cd ./multi-sig-erc20-demo
     $ npx hardhat node
@@ -49,3 +61,8 @@ Deploy the safe contracts
 
     $ cd ./multi-sig-erc20-demo
     $ npx hardhat test --network localhost
+
+### Running a script on the target network
+
+    $ cd ./multi-sig-erc20-demo
+    $ npx hardhat run scripts/{scriptName.ts} --network {network} 
