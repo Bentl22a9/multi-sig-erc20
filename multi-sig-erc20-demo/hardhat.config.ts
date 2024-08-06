@@ -6,10 +6,14 @@ import "./tasks/mint";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.20",
+  defaultNetwork: "localhost",
   networks: {
-    hardhat: {},
-    localhost: {
-      url: "http://127.0.0.1:8545"
+    "localhost": {
+      url: process.env.LOCAL_RPC_URL || ""
+    },
+    "base:sepolia": {
+      url: process.env.BASE_SEPOLIA_RPC_URL || "",
+      chainId: 84352
     }
   }
 };
