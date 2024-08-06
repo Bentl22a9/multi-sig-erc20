@@ -1,5 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import dotenv from "dotenv";
+dotenv.config();
 
 // tasks
 import "./tasks/mint";
@@ -13,7 +15,7 @@ const config: HardhatUserConfig = {
     },
     "base:sepolia": {
       url: process.env.BASE_SEPOLIA_RPC_URL || "",
-      chainId: 84352
+      chainId: 84532
     }
   }
 };

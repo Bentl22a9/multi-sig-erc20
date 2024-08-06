@@ -1,7 +1,14 @@
 import Safe from "@safe-global/protocol-kit";
-import { deployedSafeAddress, RPC_URL, safeProvider } from "../common";
+import { consts } from "../common";
+import { ethers } from "hardhat";
 
-export async function getSafeFor(ownerPk: string) {
+export function getJsonRpcProvider(network: string) {
+    const { rpcUrl } = consts[network] ?? consts.localhost;
+    return new ethers.JsonRpcProvider(rpcUrl);
+}
+
+export async function getSafeFor(ownerPk: string, network: string) {
+    const { rpcUrl, safeAddress, chainId } = consts[network] ?? consts.localhost;
 
     const contractNetworks = {
         // safeVersion: 1.4.1
@@ -17,7 +24,7 @@ export async function getSafeFor(ownerPk: string) {
         // }
     
         // safeVersion: 1.3.0
-        [await safeProvider.getChainId() + '']: {
+        [chainId + '']: {
             safeSingletonAddress: '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552', 
             safeProxyFactoryAddress: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
             multiSendAddress: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761',
@@ -30,9 +37,9 @@ export async function getSafeFor(ownerPk: string) {
     };
 
     return await Safe.init({
-        provider: RPC_URL,
+        provider: rpcUrl,
         signer: ownerPk,
-        safeAddress: deployedSafeAddress,
+        safeAddress: safeAddress,
         contractNetworks
     });
 }

@@ -1,26 +1,58 @@
-import { SafeProvider } from "@safe-global/protocol-kit";
-import dotenv from "dotenv";
-import { ethers } from "hardhat";
-dotenv.config();
+interface IConst {
+    [key: string]: {
+        rpcUrl: string,
+        safeOwners: {
+            pk: string,
+            address: string
+        } [],
+        chainId: number,
+        safeAddress: string,
+        tokenAddress: string,
+        tokenLockAddress: string,
+    }
+}
 
-export const RPC_URL = process.env.RPC_URL || "";
-    
-export const owner1Pk = process.env.ACCOUNT_0_PK || "";
-export const owner1Address = process.env.ACCOUNT_0_ADDRESS || "";
-
-export const owner2Pk = process.env.ACCOUNT_1_PK || "";
-export const owner2Address = process.env.ACCOUNT_1_ADDRESS || "";
-
-export const owner3Address = process.env.ACCOUNT_2_ADDRESS || "";
-export const owner3Pk = process.env.ACCOUNT_2_PK || "";
-  
-export const deployedSafeAddress = process.env.SAFE_PROXY_ADDRESS || "";
-
-export const tokenContractAddress = process.env.TOKEN_CONTRACT_ADDRESS || "";
-
-export const safeProvider = new SafeProvider({ 
-    provider: RPC_URL,
-    signer: owner1Pk,
-});
-
-export const ethersProvider = new ethers.JsonRpcProvider(RPC_URL);
+export const consts: IConst = {
+    "localhost": {
+        rpcUrl: process.env.LOCAL_RPC_URL || "",
+        safeOwners: [
+            {
+                pk: process.env.LOCAL_ACCOUNT_0_PK || "",
+                address: process.env.LOCAL_ACCOUNT_0_ADDRESS || ""
+            },
+            {
+                pk: process.env.LOCAL_ACCOUNT_1_PK || "",
+                address: process.env.LOCAL_ACCOUNT_1_ADDRESS || ""
+            },
+            {
+                pk: process.env.LOCAL_ACCOUNT_2_PK || "",
+                address: process.env.LOCAL_ACCOUNT_2_ADDRESS || ""
+            }
+        ],
+        safeAddress: process.env.LOCAL_SAFE_PROXY_ADDRESS || "",
+        tokenAddress: process.env.LOCAL_TOKEN_CONTRACT_ADDRESS || "",
+        tokenLockAddress: process.env.LOCAL_TOKEN_LOCK_CONTRACT_ADDRESS || "",
+        chainId: 31337
+    },
+    "base:sepolia": {
+        rpcUrl: process.env.BASE_SEPOLIA_RPC_URL || "",
+        safeOwners: [
+            {
+                pk: process.env.BASE_SEPOLIA_ACCOUNT_0_PK || "",
+                address: process.env.BASE_SEPOLIA_ACCOUNT_0_ADDRESS || ""
+            },
+            {
+                pk: process.env.BASE_SEPOLIA_ACCOUNT_1_PK || "",
+                address: process.env.BASE_SEPOLIA_ACCOUNT_1_ADDRESS || ""
+            },
+            {
+                pk: process.env.BASE_SEPOLIA_ACCOUNT_2_PK || "",
+                address: process.env.BASE_SEPOLIA_ACCOUNT_2_ADDRESS || ""
+            }
+        ],
+        safeAddress: process.env.BASE_SEPOLIA_PROXY_ADDRESS || "",
+        tokenAddress: process.env.BASE_SEPOLIA_TOKEN_CONTRACT_ADDRESS || "",
+        tokenLockAddress: process.env.BASE_SEPOLIA_TOKEN_LOCK_CONTRACT_ADDRESS || "",
+        chainId: 84532
+    }
+}

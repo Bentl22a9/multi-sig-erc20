@@ -1,15 +1,19 @@
-import Safe, { SafeAccountConfig, SafeFactory, SafeProvider } from "@safe-global/protocol-kit";
-import * as dotenv from "dotenv";
-import { owner1Address, owner1Pk, owner2Address, owner3Address, RPC_URL, safeProvider } from "../common";
-dotenv.config();
+import Safe, { SafeAccountConfig, SafeFactory } from "@safe-global/protocol-kit";
+import { consts } from "../common";
+import { network } from "hardhat";
 
 async function main() {
-    const chainId = await safeProvider.getChainId();
-    console.log(chainId);
+    const networkName = network.name;
+    console.log(`🍥 deploySafe.ts: network - ${networkName}`);
+
+    const { rpcUrl, chainId, safeOwners } = consts[networkName] ?? consts.localhost;
+    console.log(`🍥 rpcUrl - ${rpcUrl}, chainId - ${chainId}`);
+
+    const [owner1, owner2, owner3] = safeOwners;
 
     const safeFactory = await SafeFactory.init({
-        provider: RPC_URL,
-        signer: owner1Pk,
+        provider: rpcUrl,
+        signer: owner1.pk,
         contractNetworks: {
             // safeVersion: 1.4.1
             // [chainId + '']: {
@@ -39,23 +43,24 @@ async function main() {
 
     const safeAccountConfig: SafeAccountConfig = {
         owners: [
-            owner1Address,
-            owner2Address,
-            owner3Address 
+            owner1.address,
+            owner2.address,
+            owner3.address
         ],
         threshold: 2
     };
 
     const predictSafeAddress: string = await safeFactory.predictSafeAddress(safeAccountConfig);
-    console.log("Safe will be deployed at", predictSafeAddress);
-
-    const protocolKitOwner1: Safe = await safeFactory.deploySafe({ safeAccountConfig });
-
-    const safeAddress: string = await protocolKitOwner1.getAddress();
+    console.log("🍥 Safe will be deployed at", predictSafeAddress);
     
-    console.log("Safe has been deployed at", safeAddress);
+    console.log(`🍥 Safe owners - ${owner1.address, owner2.address, owner3.address}`);
 
-    console.log('🍥 Copy and paste the address to .env')
+    const safe: Safe = await safeFactory.deploySafe({ safeAccountConfig });
+
+    const safeAddress: string = await safe.getAddress();
+    
+    console.log("🍥 Safe has been deployed at", safeAddress);
+    console.log(`🍥 Copy and paste the address to .env`);
 }
 
 main().catch((error) => {

@@ -4,14 +4,18 @@ import {
 
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { owner1Address, owner1Pk, owner2Address, owner2Pk, owner3Address, owner3Pk, RPC_URL, safeProvider } from "../common";
+import { consts } from "../common";
 import { Token, TokenLock } from "../typechain-types";
 import Safe, { SafeAccountConfig, SafeFactory } from "@safe-global/protocol-kit";
 import { MetaTransactionData } from "@safe-global/safe-core-sdk-types";
 import { getSafeFor } from "../utils";
 
 describe("TokenLock", function () {
-  const owner1Wallet = new ethers.NonceManager(new ethers.Wallet(owner1Pk, ethers.provider));
+  const network = "localhost";
+  const { rpcUrl, safeOwners, chainId } = consts[network];
+  const [owner1, owner2, owner3] = safeOwners;
+
+  const owner1Wallet = new ethers.NonceManager(new ethers.Wallet(owner1.pk, ethers.provider));
 
   this.beforeEach(async function () {
     Object.assign(this, await loadFixture(deployContractsFixture));
@@ -23,8 +27,8 @@ describe("TokenLock", function () {
   }
 
   async function sendMultiSigTx(safeTxData: MetaTransactionData) {
-    const safe1 = await getSafeFor(owner1Pk);
-    const safe2 = await getSafeFor(owner2Pk);
+    const safe1 = await getSafeFor(owner1.pk, network);
+    const safe2 = await getSafeFor(owner2.pk, network);
 
     const safeTx = await safe1.createTransaction({ transactions: [safeTxData] });
     const safeTxHash = await safe1.getTransactionHash(safeTx);
@@ -56,11 +60,9 @@ describe("TokenLock", function () {
 
   async function deployContractsFixture() {
     // Safe
-    const chainId = await safeProvider.getChainId();
-  
     const safeFactory = await SafeFactory.init({
-        provider: RPC_URL,
-        signer: owner1Pk,
+        provider: rpcUrl,
+        signer: owner1.pk,
         contractNetworks: {
             // safeVersion: 1.4.1
             // [chainId + '']: {
@@ -90,9 +92,9 @@ describe("TokenLock", function () {
   
     const safeAccountConfig: SafeAccountConfig = {
         owners: [
-            owner1Address,
-            owner2Address,
-            owner3Address 
+            owner1.address,
+            owner2.address,
+            owner3.address
         ],
         threshold: 2
     };
@@ -106,9 +108,9 @@ describe("TokenLock", function () {
     }
 
     const safeList = [
-      await getSafeFor(owner1Pk),
-      await getSafeFor(owner2Pk),
-      await getSafeFor(owner3Pk)
+      await getSafeFor(owner1.pk, network),
+      await getSafeFor(owner2.pk, network),
+      await getSafeFor(owner3.pk, network)
     ];
 
     const safeAddress = await safeList[0].getAddress();

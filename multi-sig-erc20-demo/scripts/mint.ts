@@ -1,28 +1,33 @@
 import { MetaTransactionData } from "@safe-global/safe-core-sdk-types";
-import { ethers } from "hardhat";
-import { getSafeFor } from "../utils";
-import { ethersProvider, owner1Pk, owner2Pk, tokenContractAddress } from "../common";
+import { ethers, network } from "hardhat";
+import { getJsonRpcProvider, getSafeFor } from "../utils";
+import { consts } from "../common";
 import { Token } from "../typechain-types";
 
-import * as dotenv from "dotenv";
-dotenv.config();
-
 export async function mint({ amount, address } : { amount?: string, address?: string}) {
+    const networkName = network.name;
+    console.log(`🍥 mint.ts: network - ${networkName}`);
+
+    const { tokenAddress, safeOwners} = consts[networkName] ?? consts.localhost;
+    const [owner1, owner2] = safeOwners;
+
+    const jsonRpcProvider = getJsonRpcProvider(networkName);
+
     if (!amount || !address) throw Error("Required parameters are not provided! - amount, address");
 
-    console.log(`args: amount - ${amount}, address - ${address}`);
+    console.log(`🍥 amount - ${amount}, address - ${address}`);
 
     const tokenContractFactory = await ethers.getContractFactory("Token");
-    const token: Token = tokenContractFactory.attach(tokenContractAddress);
+    const token: Token = tokenContractFactory.attach(tokenAddress);
 
-    const owner1Signer = new ethers.Wallet(owner1Pk, ethersProvider);
-    const decimals = await token.connect(owner1Signer).decimals();
+    const owner1Wallet = new ethers.Wallet(owner1.pk, jsonRpcProvider);
+    const decimals = await token.connect(owner1Wallet).decimals();
 
     const unitAmount = ethers.parseUnits(amount, decimals);
-    console.log(`unitAmount - ${unitAmount}`);
+    console.log(`🍥 unitAmount - ${unitAmount}`);
 
-    const owner1ProtocolKit = await getSafeFor(owner1Pk);
-    const owner2ProtocolKit = await getSafeFor(owner2Pk);
+    const owner1ProtocolKit = await getSafeFor(owner1.pk, networkName);
+    const owner2ProtocolKit = await getSafeFor(owner2.pk, networkName);
 
     const mintTxData = token.interface.encodeFunctionData(
         "mint",
@@ -30,7 +35,7 @@ export async function mint({ amount, address } : { amount?: string, address?: st
     );
 
     const safeTxData: MetaTransactionData = {
-        to: tokenContractAddress,
+        to: tokenAddress,
         value: "0",
         data: mintTxData
     };
@@ -38,19 +43,21 @@ export async function mint({ amount, address } : { amount?: string, address?: st
     const safeTx = await owner1ProtocolKit.createTransaction({ transactions: [safeTxData] });
     const safeTxHash = await owner1ProtocolKit.getTransactionHash(safeTx);
 
-    const txResOnwer1 = await owner1ProtocolKit.approveTransactionHash(safeTxHash);
-    await txResOnwer1.transactionResponse?.wait();
+    const owner1ApproveTx = await owner1ProtocolKit.approveTransactionHash(safeTxHash);
+    const receipt1 = await owner1ApproveTx.transactionResponse?.wait();
 
-    console.log(`✅ owner1 approved mint`);
+    console.log(`✅ owner1 approved mint: txHash - ${receipt1?.hash}`);
 
-    const txResOwner2 = await owner2ProtocolKit.approveTransactionHash(safeTxHash);
-    await txResOwner2.transactionResponse?.wait();
+    const owner2ApproveTx = await owner2ProtocolKit.approveTransactionHash(safeTxHash);
+    const receipt2 = await owner2ApproveTx.transactionResponse?.wait();
 
-    console.log(`✅ owner2 approved mint`);
+    console.log(`✅ owner2 approved mint: txHash - ${receipt2?.hash}`);
 
     const execTxRes = await owner1ProtocolKit.executeTransaction(safeTx);
-    await execTxRes.transactionResponse?.wait();
+    const receipt = await execTxRes.transactionResponse?.wait();
 
-    const balanceAfter = await token.connect(owner1Signer).balanceOf(address);
+    console.log(`✅ owner1 executed tx: txHash - ${receipt?.hash}`); 
+
+    const balanceAfter = await token.connect(owner1Wallet).balanceOf(address);
     console.log(`💰 token balance of address(${address}) - ${balanceAfter}`);    
 }
