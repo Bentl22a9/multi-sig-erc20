@@ -54,5 +54,26 @@ export const consts: IConst = {
         tokenAddress: process.env.BASE_SEPOLIA_TOKEN_CONTRACT_ADDRESS || "",
         tokenLockAddress: process.env.BASE_SEPOLIA_TOKEN_LOCK_CONTRACT_ADDRESS || "",
         chainId: 84532
-    }
+    },
+    "base:mainnet": {
+        rpcUrl: process.env.BASE_MAINNET_RPC_URL || "",
+        safeOwners: [
+            {
+                pk: process.env.BASE_MAINNET_ACCOUNT_0_PK || "",
+                address: process.env.BASE_MAINNET_ACCOUNT_0_ADDRESS || ""
+            },
+            {
+                pk: process.env.BASE_MAINNET_ACCOUNT_1_PK || "",
+                address: process.env.BASE_MAINNET_ACCOUNT_1_ADDRESS || ""
+            },
+            {
+                pk: process.env.BASE_MAINNET_ACCOUNT_2_PK || "",
+                address: process.env.BASE_MAINNET_ACCOUNT_2_ADDRESS || ""
+            }
+        ],
+        safeAddress: process.env.BASE_MAINNET_PROXY_ADDRESS || "",
+        tokenAddress: process.env.BASE_MAINNET_TOKEN_CONTRACT_ADDRESS || "",
+        tokenLockAddress: process.env.BASE_MAINNET_TOKEN_LOCK_CONTRACT_ADDRESS || "",
+        chainId: 8453
+    },
 }

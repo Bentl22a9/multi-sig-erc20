@@ -16,6 +16,10 @@ const config: HardhatUserConfig = {
     "base:sepolia": {
       url: process.env.BASE_SEPOLIA_RPC_URL || "",
       chainId: 84532
+    },
+    "base:mainnet": {
+      url: process.env.BASE_MAINNET_RPC_URL || "",
+      chainId: 8453
     }
   }
 };
